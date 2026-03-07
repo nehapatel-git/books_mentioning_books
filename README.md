@@ -25,6 +25,3 @@ pip install -r requirements.txt
 python update_network.py
 ```
 
-
-### Example: 
-./viz.html
