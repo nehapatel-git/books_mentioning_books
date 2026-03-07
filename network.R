@@ -2,6 +2,7 @@ suppressPackageStartupMessages({
   library(networkD3)
   library(tidyverse)
   library(htmlwidgets)
+  library(webshot2)
 })
 
 df <- suppressMessages(read_csv("temp.csv"))
@@ -32,8 +33,11 @@ network <- forceNetwork(
   Source = "source", Target = "target",
   NodeID = "name", # title of book will be displayed next to its node
   Group = "group",
+  charge = -200,
+  linkDistance = 100,
+  bounded = FALSE,
   colourScale = JS('d3.scaleOrdinal().domain(["Source", "Reference"]).range(["#C22148", "#21C29A"]);'),
-  fontSize = 12,
+  fontSize = 14,
   zoom = TRUE,
   opacityNoHover = 0.9
 )
@@ -86,3 +90,5 @@ network_final <- onRender(network, "
 
 
 saveWidget(network_final, file= "temp.html")
+
+webshot("temp.html", file = "temp_sc.png", delay = 5)

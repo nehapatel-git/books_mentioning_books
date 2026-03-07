@@ -103,6 +103,7 @@ except subprocess.CalledProcessError:
 if input("Save the updated visual and dataframe? (y/n)") == "y":
     df.to_csv("library.csv", index = False)
     os.rename("temp.html", "viz.html")
+    os.rename("temp_sc.png", "screenshot.png")
 
 
 try:
@@ -112,6 +113,11 @@ except FileNotFoundError:
 
 try:
     os.remove("temp.csv")
+except FileNotFoundError:
+    pass
+
+try:
+    os.remove("temp_sc.csv")
 except FileNotFoundError:
     pass
 
