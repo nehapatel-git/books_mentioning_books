@@ -26,3 +26,5 @@ python update_network.py
 ```
 
 [![Example](https://raw.githubusercontent.com/nehapatel-git/novels_referencing_novels/main/screenshot.png)](https://nehapatel-git.github.io/novels_referencing_novels/viz.html)
+
+Some features: zoom, drag nodes, hover over nodes to see citation details, hover over links to see notes on the reference.
