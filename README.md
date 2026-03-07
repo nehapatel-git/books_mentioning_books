@@ -27,3 +27,4 @@ python update_network.py
 
 
 ### Example: 
+./viz.html
