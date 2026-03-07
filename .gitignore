@@ -268,5 +268,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 # my stuff
-
-prompt.R
+old_code/*

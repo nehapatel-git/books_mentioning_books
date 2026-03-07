@@ -1,8 +1,12 @@
-
+# issues: google books query returns recent print publications? instead of the original work
 # add a column for notes/quotes
-# add a column for format for both source and reference?
+# add a column for format for both source and reference? (to include non-book media?)
 # add a logical column for the reference read or not read
-# fix oliver twist year to 1838
+# add an option to make an .env file if there is no API key found (first use)
+# add requirements.txt
+# comment on code
+# add ability to hover over the points to see info, and makybe click to see quotes/notes?
+
 
 import pandas as pd
 import requests
@@ -12,21 +16,31 @@ import subprocess
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
+load_dotenv()
+API_key = os.getenv("GOOGLE_BOOKS_API_KEY")
+
+if not API_key:
+    print("Error: No API key found. Create an .env file.")
+    exit()
 
 def get_book_api(query):
     encoded_query = quote_plus(query)
     try:
-        url = f"https://openlibrary.org/search.json?q={encoded_query}"
-        data = requests.get(url, timeout=5).json() #put data into a dictionry
+        url = f"https://www.googleapis.com/books/v1/volumes?q={encoded_query}&key={API_key}"
+        data = requests.get(url, timeout=5).json()
 
-        if 'docs' in data and len(data['docs']) > 0:
+        if 'items' in data:
             results = [] #store the first 3 results
 
-            for i, item in enumerate(data['docs'][:3]):
-                title = item.get('title', 'Unknown')
-                author_list = item.get('author_name', [])
-                author = ", ".join(author_list) if author_list else "Unknown"
-                year = str(item.get('first_publish_year', 'N/A'))
+            for i, item in enumerate(data['items'][:3]):
+                info = item.get('volumeInfo', {})
+                title = info.get('title', 'Unknown')
+                author_list = info.get('authors', [])
+                if isinstance(author_list, list) and len(author_list) >0:
+                    author = ", ".join(author_list)
+                else:
+                    author = "Unknown"
+                year = info.get('publishedDate', 'N/A')[:4] # only get the year
                 results.append({'title': title, 'author': author, 'year':year})
                 print(f"[{i+1}] {title} by {author} ({year})")
 
@@ -47,14 +61,14 @@ def get_book_api(query):
             return selected['title'], selected['author'], selected['year']
       
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Connection error: {e}")
     print("\nWhoops. You gotta enter it manually.")
     return input("Title: "), input("Author: "), input("Year: ")
 
 if os.path.exists("library.csv"):
     df = pd.read_csv("library.csv")
 else:
-    df = pd.DataFrame(columns = ["source_title", "source_author", "source_year", "ref_title", "ref_author", "ref_year"])
+    df = pd.DataFrame(columns = ["source_title", "source_author", "source_year", "ref_title", "ref_author", "ref_year", "notes"])
 
 s_query = input("\nEnter book title to search: ")
 s_title, s_author, s_year = get_book_api(s_query)
@@ -62,9 +76,10 @@ s_title, s_author, s_year = get_book_api(s_query)
 while True:
     r_query = input(f"\nEnter book referenced in {s_title}: ")
     r_title, r_author, r_year = get_book_api(r_query)
+    note = input("Enter a sentence to provide some context for this reference: ")
 
     new_row = pd.DataFrame([{
-        "source_title":s_title, "source_author":s_author, "source_year":s_year, "ref_title":r_title, "ref_author":r_author, "ref_year":r_year
+        "source_title":s_title, "source_author":s_author, "source_year":s_year, "ref_title":r_title, "ref_author":r_author, "ref_year":r_year, "notes":note
     }])
     
     df = pd.concat([df, new_row], ignore_index = True)
@@ -85,7 +100,7 @@ try:
 except subprocess.CalledProcessError:
     print("Error")
 
-if input("Save the updated visual and dataframe?") == "y":
+if input("Save the updated visual and dataframe? (y/n)") == "y":
     df.to_csv("library.csv", index = False)
     os.rename("temp.html", "viz.html")
 
